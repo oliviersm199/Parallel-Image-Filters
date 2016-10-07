@@ -1,5 +1,6 @@
 #!/bin/bash
-for j in {1,2,4,8,16,24}
+
+for i in {1..10}
 do
-    time ./a.out test.png test_haha.png $j 
+./a.out test.png test_haha.png 2 
 done

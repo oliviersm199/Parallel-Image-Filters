@@ -15,6 +15,7 @@ void process(char* input_filename, char* output_filename,long thread_count)
   #pragma omp parallel for num_threads(thread_count)
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
+      //printf("Pixel:(%d,%d) Thread:%d\n",i,j,omp_get_thread_num());
       int indexRed = 4*width*i + 4*j + 0;
       int indexGreen = 4*width*i + 4*j + 1;
       int indexBlue = 4*width*i + 4*j + 2;
