@@ -3,23 +3,16 @@
 #include <stdlib.h>
 #include <omp.h>
 
-void process(char* input_filename, char* output_filename,long thread_count)
-{
-  unsigned error;
-  unsigned char *image, *new_image;
-  unsigned width, height;
 
-  error = lodepng_decode32_file(&image, &width, &height, input_filename);
-  if(error) printf("error %u: %s\n", error, lodepng_error_text(error));
-  new_image = malloc(width * height * 4 * sizeof(unsigned char));
+void rectify(unsigned char *image, unsigned char *new_image,unsigned width, unsigned height,long thread_count){
   #pragma omp parallel for num_threads(thread_count)
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
-      //printf("Pixel:(%d,%d) Thread:%d\n",i,j,omp_get_thread_num());
       int indexRed = 4*width*i + 4*j + 0;
       int indexGreen = 4*width*i + 4*j + 1;
       int indexBlue = 4*width*i + 4*j + 2;
       int indexOpacity = 4 * width*i + 4*j + 3;
+
       // Red
       if(image[indexRed]< 127){
         new_image[indexRed] = 127;
@@ -42,7 +35,27 @@ void process(char* input_filename, char* output_filename,long thread_count)
       new_image[indexOpacity] = image[indexOpacity];
     }
   }
+}
 
+
+
+void loadAndProcess(char* input_filename, char* output_filename,long thread_count)
+{
+  unsigned error;
+  unsigned char *image, *new_image;
+  unsigned width, height;
+
+  // loading the image and recreating the image size
+  error = lodepng_decode32_file(&image, &width, &height, input_filename);
+  if(error) printf("error %u: %s\n", error, lodepng_error_text(error));
+  new_image = malloc(width * height * 4 * sizeof(unsigned char));
+
+  //launch rectify application
+  for(int i = 0; i<100; i++){
+    rectify(image,new_image, width,height,thread_count);
+  }
+
+  // save the file
   lodepng_encode32_file(output_filename, new_image, width, height);
 
   free(image);
@@ -62,7 +75,7 @@ int main(int argc, char *argv[])
     exit(-1);
   }
 
-  process(input_filename, output_filename,thread_count);
+  loadAndProcess(input_filename, output_filename,thread_count);
 
   return 0;
 }
