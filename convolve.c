@@ -19,17 +19,18 @@ unsigned char clamp_output(float input){
   }
 }
 
-//adds up values using reduction to get value for particular index
-// will need to call clamp_output.
-unsigned char reduction3By3(float* subMatrix){
+unsigned char reduction(float* subMatrix){
   float sum = 0;
   for(int i = 0; i < weightMatrixDim; i++){
     for(int j = 0; j < weightMatrixDim; j++){
           sum += subMatrix[3*i + j];
     }
   }
+  free(subMatrix);
   return clamp_output(sum);
 }
+
+
 
 // color 0 = red, color 1 = green, color 2 = blue and color 3 = opacity.
 // anything else gives you -1 (error)
@@ -44,14 +45,9 @@ int generateColorIndex(int i, int j, int color, int width, int height){
 // will generate sub matrix that will then be added to get index in array
 float* generateSubConvolve(unsigned char *image, int i, int j, int color, int width, int height){
   float* subMatrix = (float*)malloc(weightMatrixDim * weightMatrixDim * sizeof(float));
-  // printf("Sub Matrix of Size: %ld\n",weightMatrixDim * weightMatrixDim * sizeof(float));
-  //printf("Initialized a subMatrix Float\n");
   for(int ii = 0;ii <weightMatrixDim;ii++){
     for(int jj=0;jj<weightMatrixDim;jj++){
-      // printf("ii:%d, jj:%d, color%d\n",i+ii-1,j+jj-1,color);
       int index = generateColorIndex(i+ii-1,j+jj-1,color,width,height);
-      // printf("Index Generated: %d\n",index);
-      // printf("Result Value:%d * %f = %f\n",image[index],w[ii][jj],image[index] * w[ii][jj]);
       subMatrix[3*ii + jj] = image[index] * w[ii][jj];
     }
   }
@@ -64,13 +60,11 @@ void convolve(unsigned char *image, unsigned char *new_image,unsigned width, uns
   for(int i = 1; i < height-1; i++){
     for(int j = 1; j < width-1; j++){
       // convolve rgb (do not convolve opacity)
-      //printf("Executing Convolution on Pixel: (%d,%d)",i,j);
       for(int color =0;color<3;color++){
-        //printf("Executing on Color: %d",color);
         float* ptr = generateSubConvolve(image,i,j,color, width, height);
         // for each convolution that we generate, execute a reduction op to calculate the value
         // in the new image.
-        new_image[generateColorIndex(i-1,j-1,color,width-2,height-2)] = reduction3By3(ptr);
+        new_image[generateColorIndex(i-1,j-1,color,width-2,height-2)] = reduction(ptr);
       }
       // setting opacity to be the same value
       int indexOpacity = generateColorIndex(i-1,j-1,3,width-2,height-2);
@@ -93,8 +87,9 @@ void loadAndProcess(char* input_filename, char* output_filename,long thread_coun
   //launch convolution
   convolve(image,new_image, width,height,thread_count);
 
+
   // save the file
-  lodepng_encode32_file(output_filename, new_image, width, height);
+  lodepng_encode32_file(output_filename, new_image, width-2, height-2);
 
   free(image);
   free(new_image);
