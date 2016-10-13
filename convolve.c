@@ -57,6 +57,7 @@ float* generateSubConvolve(unsigned char *image, int i, int j, int color, int wi
 
 void convolve(unsigned char *image, unsigned char *new_image,unsigned width, unsigned height,long thread_count){
   //going through array doing a convolution on points between (1,height -1) and (1,width-1)
+  #pragma omp parallel for num_threads(thread_count)
   for(int i = 1; i < height-1; i++){
     for(int j = 1; j < width-1; j++){
       // convolve rgb (do not convolve opacity)
@@ -85,8 +86,9 @@ void loadAndProcess(char* input_filename, char* output_filename,long thread_coun
   new_image = malloc((width-2) * (height-2) * 4 * sizeof(unsigned char));
 
   //launch convolution
-  convolve(image,new_image, width,height,thread_count);
-
+  for(int i = 0; i<10;i++){
+    convolve(image,new_image, width,height,thread_count);
+  }
 
   // save the file
   lodepng_encode32_file(output_filename, new_image, width-2, height-2);
@@ -97,6 +99,10 @@ void loadAndProcess(char* input_filename, char* output_filename,long thread_coun
 
 int main(int argc, char *argv[])
 {
+  if(argc < 4){
+    printf("Please enter a input picture file, an output picture filename and the number of threads\n");
+    exit(-2);
+  }
   char* input_filename = argv[1];
   char* output_filename = argv[2];
   char *ptr;

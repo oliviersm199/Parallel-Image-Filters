@@ -3,21 +3,15 @@
 #include <stdlib.h>
 #include <omp.h>
 
-void process(char* input_filename, char* output_filename,long thread_count)
+
+void process(unsigned char *image, unsigned char *new_image,long thread_count,unsigned width,unsigned height)
 {
-  unsigned error;
-  unsigned char *image, *new_image;
-  unsigned width, height;
   int index=0;
 
-  error = lodepng_decode32_file(&image, &width, &height, input_filename);
-  if(error) printf("error %u: %s\n", error, lodepng_error_text(error));
-  new_image = malloc((width/2) * (height/2) * 4 * sizeof(unsigned char));
-  
+
   #pragma omp parallel for num_threads(thread_count)
   for (int i = 0; i < height; i+=2) {
     for (int j = 0; j < width; j+=2) {
-      printf("Thread Number:%d\n",omp_get_thread_num());;
       int upLeftR = 4*width*i + 4*j;
       int upRightR = 4*width*i + 4*(j+1);
       int downLeftR = 4*width*(i+1) + 4*j;
@@ -120,12 +114,24 @@ void process(char* input_filename, char* output_filename,long thread_count)
       }
     }
   }
+}
+
+void loadImage(char* input_filename, char* output_filename,long thread_count){
+  unsigned error;
+  unsigned char *image, *new_image;
+  unsigned width, height;
+  error = lodepng_decode32_file(&image, &width, &height, input_filename);
+  if(error) printf("error %u: %s\n", error, lodepng_error_text(error));
+  new_image = malloc((width/2) * (height/2) * 4 * sizeof(unsigned char));
+  for(int i = 0;i<10;i++){
+    process(image,new_image,thread_count,width,height);
+  }
 
   lodepng_encode32_file(output_filename, new_image, (width/2), (height/2));
-
   free(image);
   free(new_image);
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -134,8 +140,6 @@ int main(int argc, char *argv[])
   char *ptr;
   long thread_count;
   thread_count = strtol(argv[3],&ptr,10);
-  for(int i = 0; i < 10; i++){
-  process(input_filename, output_filename,thread_count);
-  }
+  loadImage(input_filename, output_filename,thread_count);
   return 0;
 }
