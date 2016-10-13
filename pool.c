@@ -8,7 +8,6 @@ void process(unsigned char *image, unsigned char *new_image,long thread_count,un
 {
   int index=0;
 
-
   #pragma omp parallel for num_threads(thread_count)
   for (int i = 0; i < height; i+=2) {
     for (int j = 0; j < width; j+=2) {
@@ -123,7 +122,8 @@ void loadImage(char* input_filename, char* output_filename,long thread_count){
   error = lodepng_decode32_file(&image, &width, &height, input_filename);
   if(error) printf("error %u: %s\n", error, lodepng_error_text(error));
   new_image = malloc((width/2) * (height/2) * 4 * sizeof(unsigned char));
-  for(int i = 0;i<10;i++){
+
+  for(int i = 0;i<100;i++){
     process(image,new_image,thread_count,width,height);
   }
 

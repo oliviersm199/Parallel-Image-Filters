@@ -86,7 +86,7 @@ void loadAndProcess(char* input_filename, char* output_filename,long thread_coun
   new_image = malloc((width-2) * (height-2) * 4 * sizeof(unsigned char));
 
   //launch convolution
-  for(int i = 0; i<10;i++){
+  for(int i = 0; i<100;i++){
     convolve(image,new_image, width,height,thread_count);
   }
 
