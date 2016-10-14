@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <omp.h>
 
-
+// main function takes each index and performs rectify operation
 void rectify(unsigned char *image, unsigned char *new_image,unsigned width, unsigned height,long thread_count){
   #pragma omp parallel for num_threads(thread_count)
   for (int i = 0; i < height; i++) {
@@ -51,9 +51,7 @@ void loadAndProcess(char* input_filename, char* output_filename,long thread_coun
   new_image = malloc(width * height * 4 * sizeof(unsigned char));
 
   //launch rectify application
-  for(int i = 0; i<100; i++){
-    rectify(image,new_image, width,height,thread_count);
-  }
+  rectify(image,new_image, width,height,thread_count);
 
   // save the file
   lodepng_encode32_file(output_filename, new_image, width, height);
