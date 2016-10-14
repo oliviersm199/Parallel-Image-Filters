@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <omp.h>
 
-
+// compare the each color and find the biggest one and return it.
 int compare(int upLeft,int upRight,int downLeft,int downRight,unsigned char *image){	
 		
 	 if ((image[upLeft] >= image[upRight]) && (image[upLeft] >= image[downLeft]) && (image[upLeft] >= image[downRight]))
@@ -27,6 +27,7 @@ int compare(int upLeft,int upRight,int downLeft,int downRight,unsigned char *ima
 
 }
 
+//extract each color out of the image and take the max value of each color 
 void process(unsigned char *image, unsigned char *new_image,long thread_count,unsigned width,unsigned height)
 {
   #pragma omp parallel for num_threads(thread_count)
@@ -61,10 +62,11 @@ void process(unsigned char *image, unsigned char *new_image,long thread_count,un
       int downRightA = downRightR+3;
       int new_Opacity = compare(upLeftA,upRightA,downLeftA,downRightA,image);
 	new_image[(4*(width/2)*(i/2))+4*(j/2)+3]=image[new_Opacity];
+	
     }
   }
 }
-
+// generate the new image 
 void loadImage(char* input_filename, char* output_filename,long thread_count){
   unsigned error;
   unsigned char *image, *new_image;
@@ -72,6 +74,7 @@ void loadImage(char* input_filename, char* output_filename,long thread_count){
   error = lodepng_decode32_file(&image, &width, &height, input_filename);
   if(error) printf("error %u: %s\n", error, lodepng_error_text(error));
   new_image = malloc((width/2) * (height/2) * 4 * sizeof(unsigned char));
+	// to test how the number of thread change the process speed
 	for(int i = 0;i<100;i++)
 	{
 	process(image,new_image,thread_count,width,height);
